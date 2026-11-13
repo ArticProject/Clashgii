@@ -26,19 +26,108 @@ jobs:
           distribution: "temurin"
           java-version: "21"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK Platform 36.1 & Build Tools
+      - name: Accept Android SDK Licenses
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-36" "platforms;android-36.1" "build-tools;36.0.0"
+          SDK_DIR="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          mkdir -p "$SDK_DIR/licenses"
+          printf "\n24333f8a63b6825ea9c5514f83c2829b004d1fee\nd56f5187479451eabf01fb78af6dfcb131a6481e\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$SDK_DIR/licenses/android-sdk-license"
+          printf "\n84831b9409646a918e30573bab4c9c91346d8abd\n504667f4c0de7af1a06de9f4b1727b84351f2910" > "$SDK_DIR/licenses/android-sdk-preview-license"
+
+      - name: Adapt Gradle config for public GitHub Runner
+        run: |
+          python3 - << 'EOF'
+          from pathlib import Path
+          import re
+
+          # 1. settings.gradle.kts: use public foojay-resolver-convention 0.8.0
+          settings_path = Path("settings.gradle.kts")
+          settings_txt = settings_path.read_text(encoding="utf-8")
+          settings_txt = settings_txt.replace(
+              'id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"',
+              'id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"'
+          )
+          settings_path.write_text(settings_txt, encoding="utf-8")
+
+          # 2. gradle/libs.versions.toml: map internal container versions to public Maven Central / Google Maven
+          toml_path = Path("gradle/libs.versions.toml")
+          toml = toml_path.read_text(encoding="utf-8")
+          replacements = {
+              'agp = "9.1.1"': 'agp = "8.7.3"',
+              'coreKtx = "1.18.0"': 'coreKtx = "1.15.0"',
+              'junitVersion = "1.3.0"': 'junitVersion = "1.2.1"',
+              'espressoCore = "3.7.0"': 'espressoCore = "3.6.1"',
+              'activityCompose = "1.10.1"': 'activityCompose = "1.9.3"',
+              'kotlin = "2.2.10"': 'kotlin = "2.0.21"',
+              'googleDevtoolsKsp = "2.3.5"': 'googleDevtoolsKsp = "2.0.21-1.0.28"',
+              'navigationCompose = "2.8.9"': 'navigationCompose = "2.8.5"',
+              'roomRuntime = "2.7.0"': 'roomRuntime = "2.6.1"',
+              'roomKtx = "2.7.0"': 'roomKtx = "2.6.1"',
+              'roomCompiler = "2.7.0"': 'roomCompiler = "2.6.1"',
+              'kotlinxCoroutinesTest = "1.10.2"': 'kotlinxCoroutinesTest = "1.9.0"',
+              'kotlinxCoroutinesAndroid = "1.10.2"': 'kotlinxCoroutinesAndroid = "1.9.0"',
+              'kotlinxCoroutinesCore = "1.10.2"': 'kotlinxCoroutinesCore = "1.9.0"',
+              'retrofit = "2.12.0"': 'retrofit = "2.11.0"',
+              'converterMoshi = "2.12.0"': 'converterMoshi = "2.11.0"',
+              'datastorePreferences = "1.1.7"': 'datastorePreferences = "1.1.2"',
+              'robolectric = "4.16.1"': 'robolectric = "4.14.1"',
+              'firebaseBom = "34.17.0"': 'firebaseBom = "33.9.0"',
+              'googleServices = "4.5.0"': 'googleServices = "4.4.2"',
+          }
+          for old, new in replacements.items():
+              toml = toml.replace(old, new)
+          if "kotlin-android =" not in toml:
+              toml = toml.replace(
+                  "[plugins]",
+                  '[plugins]\nkotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }'
+              )
+          toml_path.write_text(toml, encoding="utf-8")
+
+          # 3. Root build.gradle.kts: add kotlin.android and remove unused google.services
+          root_gradle_path = Path("build.gradle.kts")
+          root_gradle = root_gradle_path.read_text(encoding="utf-8")
+          root_gradle = root_gradle.replace("alias(libs.plugins.google.services) apply false", "")
+          if "kotlin.android" not in root_gradle:
+              root_gradle = root_gradle.replace(
+                  "alias(libs.plugins.android.application) apply false",
+                  "alias(libs.plugins.android.application) apply false\n  alias(libs.plugins.kotlin.android) apply false"
+              )
+          root_gradle_path.write_text(root_gradle, encoding="utf-8")
+
+          # 4. app/build.gradle.kts: add kotlin.android, set compileSdk = 35, kotlinOptions jvmTarget = 11
+          app_gradle_path = Path("app/build.gradle.kts")
+          app_gradle = app_gradle_path.read_text(encoding="utf-8")
+          app_gradle = app_gradle.replace(
+              "import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy",
+              ""
+          )
+          app_gradle = app_gradle.replace("alias(libs.plugins.google.services)", "")
+          app_gradle = app_gradle.replace(
+              "googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }",
+              ""
+          )
+          if "kotlin.android" not in app_gradle:
+              app_gradle = app_gradle.replace(
+                  "alias(libs.plugins.android.application)",
+                  "alias(libs.plugins.android.application)\n  alias(libs.plugins.kotlin.android)"
+              )
+          app_gradle = re.sub(
+              r'compileSdk\s*\{[^}]*\}',
+              'compileSdk = 35',
+              app_gradle
+          )
+          app_gradle = app_gradle.replace("targetSdk = 36", "targetSdk = 35")
+          app_gradle = app_gradle.replace(
+              "targetCompatibility = JavaVersion.VERSION_11\n  }",
+              'targetCompatibility = JavaVersion.VERSION_11\n  }\n  kotlinOptions {\n    jvmTarget = "11"\n  }'
+          )
+          app_gradle_path.write_text(app_gradle, encoding="utf-8")
+          EOF
 
       - name: Prepare debug.keystore and .env
         run: |
           if [ -f "debug.keystore.base64" ]; then
             base64 -d debug.keystore.base64 > debug.keystore
-          elif [ ! -f "debug.keystore" ]; then
+          else
             keytool -genkeypair -v \
               -keystore debug.keystore \
               -storepass android \
@@ -53,15 +142,15 @@ jobs:
             cp .env.example .env
           fi
 
-      - name: Setup Gradle 9.3.1
+      - name: Setup Gradle 8.11.1
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "9.3.1"
+          gradle-version: "8.11.1"
 
       - name: Build Debug APK
-        run: gradle :app:assembleDebug --no-daemon
+        run: gradle :app:assembleDebug --no-daemon --no-configuration-cache
 
-      - name: Prepare APK for download
+      - name: Prepare RoyalePulse.apk
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk RoyalePulse.apk
 
@@ -73,6 +162,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish APK to GitHub Releases (latest)
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
