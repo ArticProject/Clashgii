@@ -596,7 +596,7 @@ fun SettingsScreen(
 
             // GitHub Actions APK Download Card
             item {
-                var githubRepoInput by remember { mutableStateOf("") }
+                var githubRepoInput by remember { mutableStateOf("ArticProject/Clashgll") }
                 val cleanRepo = githubRepoInput
                     .trim()
                     .removePrefix("https://github.com/")

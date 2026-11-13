@@ -1,6 +1,6 @@
 {
   "name": "RoyalePulse",
-  "description": "Clash Royale live elixir overlay tracker and opponent deck scout via RoyaleAPI proxy",
+  "description": "Скачать APK: https://github.com/ArticProject/Clashgll/releases/latest/download/RoyalePulse.apk — Трекер эликсира и скаут колод Clash Royale",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
