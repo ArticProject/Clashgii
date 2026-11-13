@@ -1,11 +1,24 @@
-<div align="center">
+# RoyalePulse — Трекер эликсира и скаут колод Clash Royale
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Автономное Android-приложение с компактным полупрозрачным плавающим HUD-оверлеем, автоматическим распознаванием соперника (ML Kit OCR + Clash Royale API через прокси `RoyaleAPI`) и авто-анализом высадки карт на арене.
 
-  <h1>Built with AI Studio</h2>
+## Как скачать готовый APK через GitHub на телефон
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+В проект встроен автоматический сборщик GitHub Actions (`.github/workflows/build-apk.yml`). Вам не нужен ПК или Android Studio:
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+1. Нажмите кнопку экспорта проекта в **GitHub** в меню AI Studio.
+2. Откройте ваш созданный репозиторий на GitHub с телефона.
+3. Перейдите в раздел **Releases** (или вкладку **Actions** → **Build RoyalePulse APK**).
+4. Через 2–3 минуты после отправки кода там автоматически появится готовый файл **`RoyalePulse.apk`**.
+5. Скачайте `RoyalePulse.apk` и установите на Android.
 
-</div>
+### Прямая ссылка на скачивание APK из вашего репозитория
+```text
+https://github.com/<ВАШ_ЛОГИН>/<ИМЯ_РЕПОЗИТОРИЯ>/releases/latest/download/RoyalePulse.apk
+```
+
+## Настройка после установки
+
+1. В приложении откройте вкладку **API и HUD** и вставьте ваш JWT-токен с `developer.clashroyale.com` (созданный для IP `45.79.218.79` и режима **Прокси RoyaleAPI**).
+2. Выдайте разрешение **«Поверх других приложений»**.
+3. Нажмите **«Запустить оверлей»** и включите прицел авто-анализа в компактном HUD перед началом боя.

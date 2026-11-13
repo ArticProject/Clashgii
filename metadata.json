@@ -1,0 +1,6 @@
+{
+  "name": "RoyalePulse",
+  "description": "Clash Royale live elixir overlay tracker and opponent deck scout via RoyaleAPI proxy",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

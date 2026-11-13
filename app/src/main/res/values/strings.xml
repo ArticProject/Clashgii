@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">RoyalePulse</string>
+    <string name="nav_scout">Скаут</string>
+    <string name="nav_tracker">Трекер</string>
+    <string name="nav_settings">API и HUD</string>
+    <string name="notification_channel_overlay">Оверлей эликсира</string>
+    <string name="notification_channel_overlay_desc">Уведомление активного плавающего трекера поверх игры</string>
+    <string name="notification_overlay_title">RoyalePulse активен</string>
+    <string name="notification_overlay_body">Эликсир: %1$.1f • Фаза %2$s</string>
+    <string name="notification_action_stop">Скрыть оверлей</string>
+    <string name="cd_hero_banner">Тактический фон арены RoyalePulse</string>
+    <string name="cd_card_icon">Иконка карты %s</string>
+    <string name="cd_overlay_drag">Переместить окно оверлея</string>
+    <string name="cd_overlay_minimize">Свернуть или развернуть оверлей</string>
+    <string name="cd_overlay_close">Закрыть оверлей</string>
+</resources>
